@@ -11,6 +11,9 @@ import os
 from os.path import expanduser
 from os.path import join as pjoin
     
+Video = namedtuple("Video", ["url", "date", "channel", "title"])
+Channel = namedtuple("Channel", ["url", "name"])
+TODAY = datetime.date.today().strftime("%m/%d/%y")
 
 def add_history(video, history_file):
     with open(history_file, "a") as f:
@@ -27,6 +30,15 @@ def get_videos(url):
         print("Problem with:", url, e)
         return []
 
+def get_new_videos(channels, history):
+    for a in channels:
+        channel_url, name = a
+        time.sleep(5)
+        for vid in get_videos(channel_url):
+            video_url, title = vid 
+            if video_url not in history:
+                yield Video(video_url, TODAY, name, title)
+    
 if __name__ == "__main__":
     if "-h" in sys.argv:
         print("yt_sub.py <history_file> <url_file>")
@@ -41,22 +53,12 @@ if __name__ == "__main__":
     if "-v" in sys.argv:
         print(history_file, url_file)
 
-    Video = namedtuple("Video", ["url", "date", "channel", "title"])
-    TODAY = datetime.date.today().strftime("%m/%d/%y")
-
     with open(history_file) as f:
         old_videos = [a.split()[0].strip() for a in f]
         
     with open(url_file) as f:
-        channel_info = [a.split() for a in f]
-    
-    for a in channel_info:
-        channel_url, name = a
-        time.sleep(5)
-        for vid in get_videos(channel_url):
-            video_url, title = vid 
-            new_vid = Video(video_url, TODAY, name, title)
+        channels = [Channel(a.split()[0], a.split()[1]) for a in f]
 
-            if video_url not in old_videos:
-                add_history(new_vid, history_file)
-                print("found new video", new_vid)
+    for video in get_new_videos(channels, old_videos):
+        add_history(video, history_file)
+        print("found new video", video)
