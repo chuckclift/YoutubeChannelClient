@@ -37,16 +37,6 @@ def get_videos(url):
         print("Problem with:", url, e)
         return []
 
-def get_new_videos(channels, history):
-    """
-        Yields list of videos for each channel
-    """
-    for a in channels:
-        channel_url, channel_name = a
-        time.sleep(5)
-        yield [Video(a[0], TODAY, channel_name, a[1] ) for a in get_videos(channel_url) 
-                                                       if a[0] not in history]
-
 def get_today_videos():
     history_file = expanduser(pjoin("~", ".config","ytsub","history.txt"))
     Video = namedtuple("Video", ["url", "date", "channel", "title"])
@@ -82,7 +72,7 @@ class Application(tk.Frame):
 
     def update_vids(self):
         self.clear_box()
-        t = threading.Thread(target=self.get_videos)
+        t = threading.Thread(target=self.get_recent_videos)
         t.daemon = True
         t.start()
 
@@ -100,7 +90,7 @@ class Application(tk.Frame):
         for i in range(self.results.size()):
             self.results.delete(0)
         
-    def get_videos(self):
+    def get_recent_videos(self):
         history_file = expanduser(pjoin("~", ".config","ytsub","history.txt"))
         url_file = expanduser(pjoin("~", ".config", "ytsub", "channels.txt"))
         Video = namedtuple("Video", ["url", "date", "channel", "title"])
@@ -111,18 +101,18 @@ class Application(tk.Frame):
             
         with open(url_file) as f:
             channels = [Channel(a.split()[0], a.split()[1]) for a in f]
-    
-        channels_checked = 0
-        for channel_videos in get_new_videos(channels, old_videos):
-            channels_checked += 1
-            print(channels_checked)
-            self.progress["text"] = "channels checked: {0} / {1}".format(channels_checked, len(channels))
-            for vid in channel_videos:
-                
-                self.results.insert(0, "{0} {1}".format(vid.channel, vid.title))
-                add_history(vid, history_file)
-                print("found new video", vid)
 
+        for i, channel in enumerate(channels):
+            channel_url, channel_title = channel
+            self.progress["text"] = "channels checked: {0} / {1}".format(i + 1, len(channels))
+            time.sleep(3)
+
+            for video in get_videos(channel_url):
+                video_link, video_title = video
+                if video_link not in old_videos:
+                    self.results.insert(0, "{0} {1}".format(channel_title, video_title))
+                    add_history(Video(video_link, TODAY, channel_title, video_title), history_file)
+                
 if __name__ == "__main__":
     root = tk.Tk()
     root.wm_title("ytgui")
