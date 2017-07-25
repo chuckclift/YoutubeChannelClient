@@ -14,14 +14,7 @@ import os
 from os.path import expanduser
 from os.path import join as pjoin
     
-Video = namedtuple("Video", ["url", "date", "channel", "title"])
-Channel = namedtuple("Channel", ["url", "name"])
 TODAY = datetime.date.today().strftime("%m/%d/%y")
-
-def add_history(video, history_file):
-    with open(history_file, "a") as f:
-        f.write(" ".join([video.url, video.date, video.channel, video.title]) + "\n")
-
 
 def clean_unicode(data):
     """
@@ -46,7 +39,6 @@ def get_videos(url):
 
 def get_today_videos():
     history_file = expanduser(pjoin("~", ".config","ytsub","history.txt"))
-    Video = namedtuple("Video", ["url", "date", "channel", "title"])
     TODAY = datetime.date.today().strftime("%m/%d/%y")
     
     with open(history_file) as f:
@@ -100,14 +92,13 @@ class Application(tk.Frame):
     def get_recent_videos(self):
         history_file = expanduser(pjoin("~", ".config","ytsub","history.txt"))
         url_file = expanduser(pjoin("~", ".config", "ytsub", "channels.txt"))
-        Video = namedtuple("Video", ["url", "date", "channel", "title"])
         TODAY = datetime.date.today().strftime("%m/%d/%y")
 
         with open(history_file) as f:
             old_videos = [a.split()[0].strip() for a in f]
             
         with open(url_file) as f:
-            channels = [Channel(a.split()[0], a.split()[1]) for a in f]
+            channels = [a.split() for a in f]
 
         for i, channel in enumerate(channels):
             channel_url, channel_title = channel
@@ -121,7 +112,9 @@ class Application(tk.Frame):
                     # before being displayed on tkinter
                     combined = channel_title + " " + video_title
                     self.results.insert(0, clean_unicode(combined))
-                    add_history(Video(video_link, TODAY, channel_title, video_title), history_file)
+                    with open(history_file, "a") as f:
+                        struct = [video_link, TODAY, channel_title, video_title]
+                        f.write(" ".join(*struct) + "\n")
                 
 if __name__ == "__main__":
     root = tk.Tk()
