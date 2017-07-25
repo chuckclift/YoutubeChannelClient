@@ -3,7 +3,7 @@
 import tkinter as tk
 import threading
 
-import urllib
+import requests 
 from bs4 import BeautifulSoup, SoupStrainer
 import json
 import datetime
@@ -22,15 +22,22 @@ def add_history(video, history_file):
     with open(history_file, "a") as f:
         f.write(" ".join([video.url, video.date, video.channel, video.title]) + "\n")
 
+
+def clean_unicode(data):
+    """
+        since tkinter can't display unicode over 0xFFFF, they are removed
+        before being displayed on tkinter
+    """
+    return "".join([a if ord(a) < 0xFFFF else "*" for a in data ])
+
 def get_videos(url):
     """ 
         returns a list of videos from a given channel.  
         The list has the format of [(url, title), (url, title), ... , (url, title)] 
     """
     try:
-        response = urllib.request.urlopen(url)
         strain = SoupStrainer("h3")
-        doc = BeautifulSoup(response.read(), "html.parser", parse_only=strain) 
+        doc = BeautifulSoup(requests.get(url).text, "html.parser", parse_only=strain) 
         video_entries = doc.find_all("h3", attrs={"class" : "yt-lockup-title"})
         return [(a.find("a").get("href"), a.find("a").text) for a in video_entries]
     except (urllib.error.URLError, urllib.error.HTTPError) as e:
@@ -79,7 +86,7 @@ class Application(tk.Frame):
     def show_todays_vids(self):
         self.clear_box()
         for a in get_today_videos():
-            self.results.insert(0, a)
+            self.results.insert(0, clean_unicode(a))
 
 
     ##########################
@@ -110,7 +117,10 @@ class Application(tk.Frame):
             for video in get_videos(channel_url):
                 video_link, video_title = video
                 if video_link not in old_videos:
-                    self.results.insert(0, "{0} {1}".format(channel_title, video_title))
+                    # since tkinter can't display unicode over 0xFFFF, they are removed
+                    # before being displayed on tkinter
+                    combined = channel_title + " " + video_title
+                    self.results.insert(0, clean_unicode(combined))
                     add_history(Video(video_link, TODAY, channel_title, video_title), history_file)
                 
 if __name__ == "__main__":
