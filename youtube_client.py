@@ -114,7 +114,7 @@ class Application(tk.Frame):
                     self.results.insert(0, clean_unicode(combined))
                     with open(history_file, "a") as f:
                         struct = [video_link, TODAY, channel_title, video_title]
-                        f.write(" ".join(*struct) + "\n")
+                        f.write(" ".join(struct) + "\n")
                 
 if __name__ == "__main__":
     root = tk.Tk()
