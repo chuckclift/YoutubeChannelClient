@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import tkinter as tk
+
+from tkinter import Frame, Button,  Label, Listbox, Tk
 import threading
 
 import requests 
@@ -33,7 +34,7 @@ def get_videos(url):
         doc = BeautifulSoup(requests.get(url).text, "html.parser", parse_only=strain) 
         video_entries = doc.find_all("h3", attrs={"class" : "yt-lockup-title"})
         return [(a.find("a").get("href"), a.find("a").text) for a in video_entries]
-    except (urllib.error.URLError, urllib.error.HTTPError) as e:
+    except Exception as e:
         print("Problem with:", url, e)
         return []
 
@@ -47,21 +48,21 @@ def get_today_videos():
             if date == TODAY:
                 yield " ".join(a.strip().split()[2:])
 
-class Application(tk.Frame):
+class YoutubeClient(Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
 
-        self.show_today = tk.Button(self, text="show todays vids", command=self.show_todays_vids, width=70, height=3)
+        self.show_today = Button(self, text="show todays vids", command=self.show_todays_vids, width=70, height=3)
         self.show_today.pack(side="top")
 
-        self.update = tk.Button(self, text="update video lists", width=70, height=3, command=self.update_vids)
+        self.update = Button(self, text="update video lists", width=70, height=3, command=self.update_vids)
         self.update.pack(side="top")
 
-        self.progress = tk.Label(self, text="progress")
+        self.progress = Label(self, text="progress")
         self.progress.pack(side="top")
 
-        self.results = tk.Listbox(self, height=40, width=80)
+        self.results = Listbox(self, height=40, width=80)
         self.results.pack(side="top")
 
 
@@ -117,8 +118,8 @@ class Application(tk.Frame):
                         f.write(" ".join(struct) + "\n")
                 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = Tk()
     root.wm_title("ytgui")
-    app = Application(master=root)
+    app = YoutubeClient(master=root)
     app.mainloop()
 
