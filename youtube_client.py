@@ -2,6 +2,8 @@
 
 
 from tkinter import Frame, Button,  Label, Listbox, Tk
+from tkinter import X as FILLX 
+from tkinter.ttk import Treeview
 import threading
 
 import requests 
@@ -51,7 +53,7 @@ def get_today_videos():
 class YoutubeClient(Frame):
     def __init__(self, master=None):
         super().__init__(master)
-        self.pack()
+        self.pack(fill=FILLX, expand=1)
 
         self.show_today = Button(self, text="show todays vids", command=self.show_todays_vids, width=70, height=3)
         self.show_today.pack(side="top")
@@ -62,29 +64,50 @@ class YoutubeClient(Frame):
         self.progress = Label(self, text="progress")
         self.progress.pack(side="top")
 
-        self.results = Listbox(self, height=40, width=80)
-        self.results.pack(side="top")
 
+        # results tree
+        self.results = Treeview(self)
+        self.results["columns"] = ("video")
+        self.results.column("video", width=100)
+        self.results.heading("video", text="video")
+        self.results.pack(side="top", fill=FILLX, expand=1)
+
+            
 
     #########################
     ###  button functions ###
     #########################
 
     def update_vids(self):
-        self.clear_box()
+        self.clear_results()
         t = threading.Thread(target=self.get_recent_videos)
         t.daemon = True
         t.start()
 
     def show_todays_vids(self):
-        self.clear_box()
+        self.clear_results()
+
         for a in get_today_videos():
-            self.results.insert(0, clean_unicode(a))
-
-
+            channel = a.split()[0]
+            title = " ".join(a.split()[1:])
+            self.add_video(channel, title)
+                
     ##########################
     ###  utility functions ###
     ##########################
+
+    def clear_results(self):
+        if self.results.get_children():
+            for a in self.results.get_children():
+                self.results.delete(a)
+
+    def add_video(self, channel, video_title):
+        channel_tree = [b for b in self.results.get_children() if b == channel]
+        if channel_tree:
+            self.results.insert(channel_tree[0], 0, values=(video_title,))
+        else:
+            channel_tree_branch = self.results.insert("", 0, channel, text=channel)
+            video_leaf = self.results.insert(channel_tree_branch, 0, values=(video_title,)) 
 
     def clear_box(self):
         for i in range(self.results.size()):
@@ -112,7 +135,8 @@ class YoutubeClient(Frame):
                     # since tkinter can't display unicode over 0xFFFF, they are removed
                     # before being displayed on tkinter
                     combined = channel_title + " " + video_title
-                    self.results.insert(0, clean_unicode(combined))
+                    # self.results.insert(0, clean_unicode(combined))
+                    self.add_video(channel_title, video_title)
                     with open(history_file, "a") as f:
                         struct = [video_link, TODAY, channel_title, video_title]
                         f.write(" ".join(struct) + "\n")
