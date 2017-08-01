@@ -3,6 +3,7 @@
 
 from tkinter import Frame, Button,  Label, Listbox, Tk
 from tkinter import X as FILLX 
+from tkinter import BOTH as FILLBOTH
 from tkinter.ttk import Treeview
 import threading
 
@@ -53,13 +54,13 @@ def get_today_videos():
 class YoutubeClient(Frame):
     def __init__(self, master=None):
         super().__init__(master)
-        self.pack(fill=FILLX, expand=1)
+        self.pack(fill=FILLBOTH, expand=1)
 
-        self.show_today = Button(self, text="show todays vids", command=self.show_todays_vids, width=70, height=3)
-        self.show_today.pack(side="top")
+        self.show_today = Button(self, text="show todays vids",  width=70, height=3, command=self.show_todays_vids)
+        self.show_today.pack(side="top", fill=FILLX)
 
         self.update = Button(self, text="update video lists", width=70, height=3, command=self.update_vids)
-        self.update.pack(side="top")
+        self.update.pack(side="top", fill=FILLX)
 
         self.progress = Label(self, text="progress")
         self.progress.pack(side="top")
@@ -68,11 +69,14 @@ class YoutubeClient(Frame):
         # results tree
         self.results = Treeview(self)
         self.results["columns"] = ("video")
-        self.results.column("video", width=100)
-        self.results.heading("video", text="video")
-        self.results.pack(side="top", fill=FILLX, expand=1)
 
-            
+        self.results.column("#0", width=175, stretch=False)
+        self.results.heading("#0", text="channel")
+
+        self.results.column("video")
+        self.results.heading("video", text="video")
+
+        self.results.pack(side="top", fill=FILLBOTH, expand=1)
 
     #########################
     ###  button functions ###
@@ -104,10 +108,12 @@ class YoutubeClient(Frame):
     def add_video(self, channel, video_title):
         channel_tree = [b for b in self.results.get_children() if b == channel]
         if channel_tree:
-            self.results.insert(channel_tree[0], 0, values=(video_title,))
+            video_leaf = self.results.insert(channel_tree[0], 0, values=(video_title,))
+            self.results.see(video_leaf)
         else:
             channel_tree_branch = self.results.insert("", 0, channel, text=channel)
             video_leaf = self.results.insert(channel_tree_branch, 0, values=(video_title,)) 
+            self.results.see(video_leaf)
 
     def clear_box(self):
         for i in range(self.results.size()):
@@ -143,7 +149,7 @@ class YoutubeClient(Frame):
                 
 if __name__ == "__main__":
     root = Tk()
+    root.geometry('800x800+50+50')
     root.wm_title("ytgui")
     app = YoutubeClient(master=root)
     app.mainloop()
-
