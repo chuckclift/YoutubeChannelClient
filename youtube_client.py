@@ -140,9 +140,7 @@ class YoutubeClient(Frame):
                 if video_link not in old_videos:
                     # since tkinter can't display unicode over 0xFFFF, they are removed
                     # before being displayed on tkinter
-                    combined = channel_title + " " + video_title
-                    # self.results.insert(0, clean_unicode(combined))
-                    self.add_video(channel_title, video_title)
+                    self.add_video(clean_unicode(channel_title), clean_unicode(video_title))
                     with open(history_file, "a") as f:
                         struct = [video_link, TODAY, channel_title, video_title]
                         f.write(" ".join(struct) + "\n")
