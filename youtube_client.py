@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 
 from tkinter import Frame, Button,  Label, Listbox, Tk
 from tkinter import X as FILLX 
@@ -146,8 +147,37 @@ class YoutubeClient(Frame):
                         f.write(" ".join(struct) + "\n")
                 
 if __name__ == "__main__":
-    root = Tk()
-    root.geometry('800x800+50+50')
-    root.wm_title("ytgui")
-    app = YoutubeClient(master=root)
-    app.mainloop()
+
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-g", "--gui", action="store_true", help="run gui")
+    args = parser.parse_args()
+
+    if args.gui:
+        root = Tk()
+        root.geometry('800x800+50+50')
+        root.wm_title("ytgui")
+        app = YoutubeClient(master=root)
+        app.mainloop()
+    else:
+        history_file = expanduser(pjoin("~", ".config","ytsub","history.txt"))
+        url_file = expanduser(pjoin("~", ".config", "ytsub", "channels.txt"))
+        TODAY = datetime.date.today().strftime("%m/%d/%y")
+
+        with open(history_file) as f:
+            old_videos = [a.split()[0].strip() for a in f]
+            
+        with open(url_file) as f:
+            channels = [a.split() for a in f]
+
+        for i, channel in enumerate(channels):
+            channel_url, channel_title = channel
+            time.sleep(3)
+
+            for video in get_videos(channel_url):
+                video_link, video_title = video
+                if video_link not in old_videos:
+                    with open(history_file, "a") as f:
+                        struct = [video_link, TODAY, channel_title, video_title]
+                        f.write(" ".join(struct) + "\n")
+
