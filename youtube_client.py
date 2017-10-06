@@ -5,7 +5,7 @@ import argparse
 from tkinter import Frame, Button,  Label, Listbox, Tk
 from tkinter import X as FILLX 
 from tkinter import BOTH as FILLBOTH
-from tkinter.ttk import Treeview
+from tkinter.ttk import Treeview, Progressbar
 import threading
 
 import requests 
@@ -57,16 +57,6 @@ class YoutubeClient(Frame):
         super().__init__(master)
         self.pack(fill=FILLBOTH, expand=1)
 
-        self.show_today = Button(self, text="show todays vids",  width=70, height=3, command=self.show_todays_vids)
-        self.show_today.pack(side="top", fill=FILLX)
-
-        self.update = Button(self, text="update video lists", width=70, height=3, command=self.update_vids)
-        self.update.pack(side="top", fill=FILLX)
-
-        self.progress = Label(self, text="progress")
-        self.progress.pack(side="top")
-
-
         # results tree
         self.results = Treeview(self)
         self.results["columns"] = ("video")
@@ -78,6 +68,25 @@ class YoutubeClient(Frame):
         self.results.heading("video", text="video")
 
         self.results.pack(side="top", fill=FILLBOTH, expand=1)
+
+
+
+        # I/O row
+        self.button_bar = Frame(self)
+        self.button_bar.pack(side="top", fill=FILLX)
+
+        self.update = Button(self.button_bar, text="update video lists", command=self.update_vids, height=3)
+        self.update.pack(side="right")
+
+        self.show_today = Button(self.button_bar, text="show todays vids",   command=self.show_todays_vids, height=3) 
+        self.show_today.pack(side="right")
+
+        self.progressLabel = Label(self.button_bar, text="progress")
+        self.progressLabel.pack(side="left")
+
+        self.progress = Progressbar(self.button_bar, orient="horizontal", length=200, mode="determinate")
+        self.progress.pack(side="left")
+
 
     #########################
     ###  button functions ###
@@ -131,9 +140,11 @@ class YoutubeClient(Frame):
         with open(url_file) as f:
             channels = [a.split() for a in f]
 
+        self.progress["maximum"] = len(channels)
         for i, channel in enumerate(channels):
             channel_url, channel_title = channel
-            self.progress["text"] = "channels checked: {0} / {1}".format(i + 1, len(channels))
+            self.progressLabel["text"] = "{0} / {1}".format(i + 1, len(channels))
+            self.progress["value"] = i
             time.sleep(3)
 
             for video in get_videos(channel_url):
