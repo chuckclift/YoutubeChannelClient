@@ -67,6 +67,8 @@ class YoutubeClient(Frame):
         self.results.column("video")
         self.results.heading("video", text="video")
 
+        self.results.bind("<Double-Button-1>", self.clipboard)
+
         self.results.pack(side="top", fill=FILLBOTH, expand=1)
 
 
@@ -89,7 +91,7 @@ class YoutubeClient(Frame):
 
 
     #########################
-    ###  button functions ###
+    ##  callback functions ##
     #########################
 
     def update_vids(self):
@@ -105,6 +107,15 @@ class YoutubeClient(Frame):
             channel = a.split()[0]
             title = " ".join(a.split()[1:])
             self.add_video(channel, title)
+
+    def clipboard(self, event):
+        index = self.results.focus()
+        if index and "values" in self.results.item(index):
+            video_title = self.results.item(index)["values"][0]
+            self.clipboard_clear()
+            self.clipboard_append(video_title)
+            print(video_title)
+
                 
     ##########################
     ###  utility functions ###
