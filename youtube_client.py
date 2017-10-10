@@ -61,9 +61,14 @@ class YoutubeClient(Frame):
         if dark_theme:
             Style().configure(".", background="#111111", foreground="white")
             Style().configure("Treeview", background="#222222", fieldbackground="#222222", foreground="orange")
+            Style().map("Treeview.Heading", background=[('active', '#111111')], foreground=[('active','orange')])
+            Style().configure("Treeview.Heading", font=("TkDefaultFont", 18))
             Style().map("TButton", 
                             background=[('pressed', '#555555')], 
                             foreground=[('active', "orange")])
+
+            Style().configure("TButton", font=("TkDefaultFont", 18))
+            Style().configure("TLabel", font=("TkDefaultFont", 18))
     
 
         # results tree
@@ -94,7 +99,7 @@ class YoutubeClient(Frame):
         self.progress.pack(side="left")
 
 
-        self.update = Button(self.button_bar, text="update video lists", command=self.update_vids)
+        self.update = Button(self.button_bar, text="Update", command=self.update_vids)
         self.update.pack(side="right")
 
         self.show_today = Button(self.button_bar, text="show todays vids",   command=self.show_todays_vids) 
