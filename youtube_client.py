@@ -2,10 +2,10 @@
 
 import argparse
 
-from tkinter import Frame, Button,  Label, Listbox, Tk
+from tkinter import Tk
 from tkinter import X as FILLX 
 from tkinter import BOTH as FILLBOTH
-from tkinter.ttk import Treeview, Progressbar
+from tkinter.ttk import Treeview, Progressbar, Style, Frame, Label, Button
 import threading
 
 import requests 
@@ -53,9 +53,18 @@ def get_today_videos():
                 yield " ".join(a.strip().split()[2:])
 
 class YoutubeClient(Frame):
-    def __init__(self, master=None):
+    def __init__(self, dark_theme=False, master=None):
         super().__init__(master)
         self.pack(fill=FILLBOTH, expand=1)
+
+        
+        if dark_theme:
+            Style().configure(".", background="#111111", foreground="white")
+            Style().configure("Treeview", background="#222222", fieldbackground="#222222", foreground="orange")
+            Style().map("TButton", 
+                            background=[('pressed', '#555555')], 
+                            foreground=[('active', "orange")])
+    
 
         # results tree
         self.results = Treeview(self)
@@ -77,17 +86,19 @@ class YoutubeClient(Frame):
         self.button_bar = Frame(self)
         self.button_bar.pack(side="top", fill=FILLX)
 
-        self.update = Button(self.button_bar, text="update video lists", command=self.update_vids, height=3)
-        self.update.pack(side="right")
-
-        self.show_today = Button(self.button_bar, text="show todays vids",   command=self.show_todays_vids, height=3) 
-        self.show_today.pack(side="right")
 
         self.progressLabel = Label(self.button_bar, text="progress")
         self.progressLabel.pack(side="left")
 
         self.progress = Progressbar(self.button_bar, orient="horizontal", length=200, mode="determinate")
         self.progress.pack(side="left")
+
+
+        self.update = Button(self.button_bar, text="update video lists", command=self.update_vids)
+        self.update.pack(side="right")
+
+        self.show_today = Button(self.button_bar, text="show todays vids",   command=self.show_todays_vids) 
+        self.show_today.pack(side="right")
 
 
     #########################
@@ -110,11 +121,10 @@ class YoutubeClient(Frame):
 
     def clipboard(self, event):
         index = self.results.focus()
-        if index and "values" in self.results.item(index):
+        if index and "values" in self.results.item(index) and len(self.results.item(index)["values"]):
             video_title = self.results.item(index)["values"][0]
             self.clipboard_clear()
             self.clipboard_append(video_title)
-            print(video_title)
 
                 
     ##########################
@@ -173,13 +183,14 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--gui", action="store_true", help="run gui")
+    parser.add_argument("-d", "--dark", action="store_true", help="Dark theme?")
     args = parser.parse_args()
 
     if args.gui:
         root = Tk()
-        root.geometry('800x800+50+50')
+        root.geometry('800x500+0+0')
         root.wm_title("ytgui")
-        app = YoutubeClient(master=root)
+        app = YoutubeClient(dark_theme=args.dark, master=root)
         app.mainloop()
     else:
         history_file = expanduser(pjoin("~", ".config","ytsub","history.txt"))
