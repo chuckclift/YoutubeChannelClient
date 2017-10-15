@@ -85,8 +85,6 @@ class YoutubeClient(Frame):
 
         self.results.pack(side="top", fill=FILLBOTH, expand=1)
 
-
-
         # I/O row
         self.button_bar = Frame(self)
         self.button_bar.pack(side="top", fill=FILLX)
@@ -142,6 +140,11 @@ class YoutubeClient(Frame):
                 self.results.delete(a)
 
     def add_video(self, channel, video_title):
+        # since tkinter can't display unicode over 0xFFFF, they are removed
+        # before being displayed on tkinter
+        channel = clean_unicode(channel)
+        video_title = clean_unicode(video_title)
+
         channel_tree = [b for b in self.results.get_children() if b == channel]
         if channel_tree:
             video_leaf = self.results.insert(channel_tree[0], 0, values=(video_title,))
@@ -170,18 +173,18 @@ class YoutubeClient(Frame):
         for i, channel in enumerate(channels):
             channel_url, channel_title = channel
             self.progressLabel["text"] = "{0} / {1}".format(i + 1, len(channels))
-            self.progress["value"] = i
             time.sleep(3)
 
             for video in get_videos(channel_url):
                 video_link, video_title = video
                 if video_link not in old_videos:
-                    # since tkinter can't display unicode over 0xFFFF, they are removed
-                    # before being displayed on tkinter
-                    self.add_video(clean_unicode(channel_title), clean_unicode(video_title))
+                    self.add_video(channel_title, video_title)
                     with open(history_file, "a") as f:
                         struct = [video_link, TODAY, channel_title, video_title]
                         f.write(" ".join(struct) + "\n")
+
+            # after values are added, increment the progress bar.
+            self.progress["value"] = i + 1
                 
 if __name__ == "__main__":
 
